@@ -17,6 +17,40 @@ def check_and_install_requirements():
         'pytz': 'pytz',
         'pyzipper': 'pyzipper'
     }
+    
+    def install_package(package_name):
+        try:
+            print(f"Installing {package_name}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
+            print(f"{package_name} installed successfully.")
+            return True
+        except subprocess.CalledProcessError:
+            print(f"Error installing {package_name}.")
+            return False
+
+    packages_to_install = []
+    try:
+        import pkg_resources
+        installed_packages = {pkg.key for pkg in pkg_resources.working_set}
+    except ImportError:
+        install_package('setuptools')
+        import pkg_resources
+        installed_packages = {pkg.key for pkg in pkg_resources.working_set}
+
+    for package, pip_name in required_packages.items():
+        if package.lower() not in installed_packages:
+            packages_to_install.append(pip_name)
+
+    if packages_to_install:
+        print("Missing libraries detected. Starting installation...")
+        for package in packages_to_install:
+            success = install_package(package)
+            if not success:
+                print(f"Some libraries could not be installed. Please run pip install {package} manually.")
+                sys.exit(1)
+        print("All required libraries installed!")
+        return True
+    return False
 
 def is_container() -> bool:
     return os.path.exists("/.dockerenv") or os.path.exists("/var/run/secrets/kubernetes.io")
