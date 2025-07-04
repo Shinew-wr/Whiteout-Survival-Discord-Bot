@@ -30,6 +30,22 @@ class GNCommands(commands.Cog):
                     auto_result = cursor.fetchone()
                     auto_value = auto_result[0] if auto_result else 1
                     
+                    # Check OCR initialization status
+                    ocr_status = "❌"
+                    ocr_details = "Not initialized"
+                    try:
+                        gift_operations_cog = self.bot.get_cog('GiftOperations')
+                        if gift_operations_cog and hasattr(gift_operations_cog, 'captcha_solver'):
+                            if gift_operations_cog.captcha_solver and gift_operations_cog.captcha_solver.is_initialized:
+                                ocr_status = "✅"
+                                ocr_details = "Gift Code Redeemer (OCR) ready"
+                            else:
+                                ocr_details = "Solver not initialized"
+                        else:
+                            ocr_details = "GiftOperations cog not found"
+                    except Exception as e:
+                        ocr_details = f"Error checking OCR: {str(e)[:30]}..."
+                    
                     status_embed = discord.Embed(
                         title="🤖 Bot Successfully Activated",
                         description=(
@@ -39,24 +55,24 @@ class GNCommands(commands.Cog):
                             "✅ Database connections established\n"
                             "✅ Command systems initialized\n"
                             f"{'✅' if auto_value == 1 else '❌'} Alliance Control Messages\n"
+                            f"{ocr_status} {ocr_details}\n"
                             "━━━━━━━━━━━━━━━━━━━━━━\n"
                         ),
                         color=discord.Color.green()
                     )
 
                     status_embed.add_field(
-                        name="📌 Support Information",
+                        name="📌 Community & Support",
                         value=(
-                            "**Developer:** <@918825495456514088>\n"
-                            "**Discord Server:** [Click to Join](https://discord.gg/whiteoutall)\n"
-                            "**Support:** [Buy me a coffee ☕](https://www.buymeacoffee.com/reloisback)\n"
+                            "**GitHub Repository:** [Whiteout Project](https://github.com/whiteout-project/bot)\n"
+                            "**Discord Community:** [Join our Discord](https://discord.gg/HFnNnQWnbS)\n"
+                            "**Bug Reports:** [GitHub Issues](https://github.com/whiteout-project/bot/issues)\n"
                             "━━━━━━━━━━━━━━━━━━━━━━"
                         ),
                         inline=False
                     )
 
-                    status_embed.set_thumbnail(url="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png")
-                    status_embed.set_footer(text="Thank you for using our bot! Feel free to contact for support.")
+                    status_embed.set_footer(text="Thanks for using the bot! Maintained with ❤️ by the WOSLand Bot Team.")
 
                     await admin_user.send(embed=status_embed)
 

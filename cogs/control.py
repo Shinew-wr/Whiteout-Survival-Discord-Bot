@@ -10,9 +10,10 @@ from datetime import datetime
 from colorama import Fore, Style
 import os
 from aiohttp_socks import ProxyConnector
+import traceback
+import ssl
 
 SECRET = 'tB87#kPtkxqOS2'
-
 
 level_mapping = {
     31: "30-1", 32: "30-2", 33: "30-3", 34: "30-4",
@@ -78,9 +79,25 @@ class Control(commands.Cog):
         form = f"sign={sign}&{form}"
 
         try:
-            connector = ProxyConnector.from_url(proxy) if proxy else None
-            async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.post(url, headers=headers, data=form, ssl=False) as response:
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            timeout = aiohttp.ClientTimeout(total=30, connect=10)
+            connector_kwargs = {
+                'ssl': ssl_context,
+                'limit': 10,
+                'limit_per_host': 5,
+                'enable_cleanup_closed': True
+            }
+            
+            if proxy:
+                connector = ProxyConnector.from_url(proxy, **connector_kwargs)
+            else:
+                connector = aiohttp.TCPConnector(**connector_kwargs)
+                
+            async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+                async with session.post(url, headers=headers, data=form) as response:
                     if response.status == 200:
                         return await response.json()
                     else:
@@ -124,7 +141,6 @@ class Control(commands.Cog):
                 result = cursor.fetchone()
                 auto_value = result[0] if result else 1
         
-        
         embed = discord.Embed(
             title=f"🏰 {alliance_name} Alliance Control",
             description="🔍 Checking for changes in member status...",
@@ -147,6 +163,11 @@ class Control(commands.Cog):
             message = await channel.send(embed=embed)
 
         furnace_changes, nickname_changes, kid_changes = [], [], []
+
+        def safe_list(input_list): # Avoid issues with list indexing
+            if not isinstance(input_list, list):
+                return []
+            return [str(item) for item in input_list if item]
 
         i = 0
         while i < total_users:
@@ -221,31 +242,31 @@ class Control(commands.Cog):
 
         if furnace_changes or nickname_changes or kid_changes:
             if furnace_changes:
-                furnace_embed = discord.Embed(
-                    title="🔥 Furnace Level Changes",
-                    description="\n\n".join(furnace_changes),
-                    color=discord.Color.orange()
+                await self.send_embed(
+                    channel=channel,
+                    title=f"🔥 **{alliance_name}** Furnace Level Changes",
+                    description=safe_list(furnace_changes),
+                    color=discord.Color.orange(),
+                    footer=f"📊 Total Changes: {len(furnace_changes)}"
                 )
-                furnace_embed.set_footer(text=f"📊 Total Changes: {len(furnace_changes)}")
-                await channel.send(embed=furnace_embed)
 
             if nickname_changes:
-                nickname_embed = discord.Embed(
-                    title="📝 Nickname Changes",
-                    description="\n".join(nickname_changes),
-                    color=discord.Color.blue()
+                await self.send_embed(
+                    channel=channel,
+                    title=f"📝 **{alliance_name}** Nickname Changes",
+                    description=safe_list(nickname_changes),
+                    color=discord.Color.blue(),
+                    footer=f"📊 Total Changes: {len(nickname_changes)}"
                 )
-                nickname_embed.set_footer(text=f"📊 Total Changes: {len(nickname_changes)}")
-                await channel.send(embed=nickname_embed)
 
             if kid_changes:
-                kid_embed = discord.Embed(
-                    title="🌍 State Transfer Notifications",
-                    description="\n\n".join(kid_changes),
-                    color=discord.Color.green()
+                await self.send_embed(
+                    channel=channel,
+                    title=f"🌍 **{alliance_name}** State Transfer Notifications",
+                    description=safe_list(kid_changes),
+                    color=discord.Color.green(),
+                    footer=f"📊 Total Changes: {len(kid_changes)}"
                 )
-                kid_embed.set_footer(text=f"📊 Total Changes: {len(kid_changes)}")
-                await channel.send(embed=kid_embed)
 
             embed.color = discord.Color.green()
             embed.set_field_at(
@@ -283,14 +304,38 @@ class Control(commands.Cog):
         print(f"{Fore.GREEN}{alliance_name} Alliance Control completed at {end_time.strftime('%Y-%m-%d %H:%M:%S')}{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}{alliance_name} Alliance Total Duration: {duration}{Style.RESET_ALL}")
 
-    async def send_embed(self, channel, title, description, color):
-        embed = discord.Embed(
-            title=title,
-            description=description,
-            color=color
-        )
-        embed.set_footer(text="🔄 Alliance Control System")
-        await channel.send(embed=embed)
+    async def send_embed(self, channel, title, description, color, footer):
+        if isinstance(description, str):
+            description = [description]
+
+        current_chunk = []
+        current_length = 0
+
+        for desc in description:
+            desc_length = len(desc) + 2
+
+            if current_length + desc_length > 2000:
+                embed = discord.Embed(
+                    title=title,
+                    description="\n\n".join(current_chunk),
+                    color=color
+                )
+                embed.set_footer(text="Alliance Control System")
+                await channel.send(embed=embed)
+                current_chunk = [desc]
+                current_length = desc_length
+            else:
+                current_chunk.append(desc)
+                current_length += desc_length
+
+        if current_chunk:
+            embed = discord.Embed(
+                title=title,
+                description="\n\n".join(current_chunk),
+                color=color
+            )
+            embed.set_footer(text=footer)
+            await channel.send(embed=embed)
 
     async def process_control_queue(self):
         print("[CONTROL] Queue processor started")
@@ -339,7 +384,10 @@ class Control(commands.Cog):
                     color=discord.Color.red()
                 )
                 try:
-                    await channel.send(embed=error_embed)
+                    if channel is not None: # Check if channel exists before trying to send
+                        await channel.send(embed=error_embed)
+                    else:
+                        print(f"[ERROR] Cannot send error message - no channel for alliance {alliance_id}")
                 except:
                     pass
                 
