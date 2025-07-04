@@ -6,6 +6,17 @@ from keep_alive import keep_alive
 
 keep_alive()
 
+def check_and_install_requirements():
+    required_packages = {
+        'discord.py': 'discord.py',
+        'colorama': 'colorama',
+        'requests': 'requests',
+        'aiohttp': 'aiohttp',
+        'python-dotenv': 'python-dotenv',
+        'aiohttp-socks': 'aiohttp-socks',
+        'pytz': 'pytz',
+        'pyzipper': 'pyzipper'
+    }
 
 def is_container() -> bool:
     return os.path.exists("/.dockerenv") or os.path.exists("/var/run/secrets/kubernetes.io")
