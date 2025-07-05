@@ -9,7 +9,7 @@ import asyncio
 from keep_alive import keep_alive
 
 VERSION_FILE = "version"
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_TOKEN = os.getenv("discordkey")
 
 REPO_RELEASE_URL = "https://api.github.com/repos/whiteout-project/bot/releases/latest"
 
