@@ -5,7 +5,12 @@ app = Flask('')
 
 @app.route('/')
 def main():
-	return 'Discord bot ok'
+    try:
+        with open("version", "r") as f:
+            return f"Discord bot ok - version: {f.read().strip()}"
+    except:
+        return "Discord bot ok - version: unknown"
+
 
 def run():
     app.run(host="0.0.0.0", port=8080)
