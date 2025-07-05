@@ -519,7 +519,10 @@ if __name__ == "__main__":
                 if not is_container():
                     if "--autoupdate" in sys.argv:
                         update = True
-                    
+                    else:
+                        print("Note: If your terminal is not interactive, you can use the --autoupdate argument to skip this prompt.")
+                        ask = input("Do you want to update? (y/n): ").strip().lower()
+                        update = ask == "y"
                 else:
                     print(Fore.YELLOW + "Running in a container. Skipping update prompt." + Style.RESET_ALL)
                     update = True
