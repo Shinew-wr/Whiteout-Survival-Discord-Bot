@@ -96,7 +96,7 @@ except ImportError:
 UPDATE_SOURCES = [
     {
         "name": "GitHub",
-        "api_url": "https://api.github.com/repos/whiteout-project/bot/releases/latest",
+        "api_url": "https://api.github.com/repos/Shinew-wr/Whiteout-Survival-Discord-Bot/releases/latest",
         "primary": True
     },
     {
