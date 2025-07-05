@@ -11,6 +11,9 @@ VERSION_FILE = "version"
 DISCORD_TOKEN = os.getenv("discordkey")  # 改為你的環境變數名稱
 RELEASE_URL = "https://api.github.com/repos/whiteout-project/bot/releases/latest"
 
+def run_bot():
+    print("📢 Entered run_bot()")
+    
 def get_latest_release():
     try:
         print("🔍 Checking GitHub release...")
