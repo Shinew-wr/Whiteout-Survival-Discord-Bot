@@ -1,0 +1,2 @@
+pip uninstall colorama
+pip install colorama
