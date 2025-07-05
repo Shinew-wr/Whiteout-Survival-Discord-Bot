@@ -6,10 +6,6 @@ from keep_alive import keep_alive
 
 keep_alive()
 
-from colorama import colorama
-
-forceUpdate()
-
 def is_container() -> bool:
     return os.path.exists("/.dockerenv") or os.path.exists("/var/run/secrets/kubernetes.io")
 
