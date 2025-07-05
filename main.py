@@ -649,7 +649,8 @@ if __name__ == "__main__":
     import asyncio
     from datetime import datetime
             
-    asyncio.run(check_and_update_files())
+    if "--autoupate"in sys.argv:
+	asyncio.run(check_and_update_files())
             
     import discord
     from discord.ext import commands
