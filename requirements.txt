@@ -6,3 +6,5 @@ colorama
 aiohttp_socks
 pytz
 pyzipper
+requests
+certifi
