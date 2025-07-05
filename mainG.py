@@ -5,30 +5,25 @@ import requests
 import shutil
 import zipfile
 import asyncio
-
 from keep_alive import keep_alive
 
 VERSION_FILE = "version"
-DISCORD_TOKEN = os.getenv("discordkey")
-
-REPO_RELEASE_URL = "https://api.github.com/repos/whiteout-project/bot/releases/latest"
-
+DISCORD_TOKEN = os.getenv("discordkey")  # 改為你的環境變數名稱
+RELEASE_URL = "https://api.github.com/repos/whiteout-project/bot/releases/latest"
 
 def get_latest_release():
     try:
         print("🔍 Checking GitHub release...")
-        res = requests.get(REPO_RELEASE_URL, timeout=30)
-        res.raise_for_status()
-        data = res.json()
+        r = requests.get(RELEASE_URL)
+        r.raise_for_status()
+        data = r.json()
         tag = data.get("tag_name", "")
         asset = data["assets"][0]["browser_download_url"] if data.get("assets") else None
-        body = data.get("body", "")
-        print(f"✅ Latest release: {tag}")
-        return tag, asset, body
+        print(f"✅ Latest release tag: {tag}")
+        return tag, asset
     except Exception as e:
-        print(f"❌ Failed to get release: {e}")
-        return None, None, None
-
+        print(f"❌ Failed to get latest release: {e}")
+        return None, None
 
 def get_current_version():
     if os.path.exists(VERSION_FILE):
@@ -36,64 +31,74 @@ def get_current_version():
             return f.read().strip()
     return "v0.0.0"
 
-
-def write_version(version):
+def write_version(tag):
     with open(VERSION_FILE, "w") as f:
-        f.write(version)
+        f.write(tag)
 
+def install_requirements(path="requirements.txt"):
+    if os.path.exists(path):
+        print(f"📦 Installing dependencies from {path}...")
+        subprocess.call([sys.executable, "-m", "pip", "install", "-r", path])
+    else:
+        print(f"⚠️ {path} not found.")
 
 def update_bot():
-    latest_tag, asset_url, notes = get_latest_release()
+    latest_tag, asset_url = get_latest_release()
     current_version = get_current_version()
+    print(f"📌 Current version: {current_version}, Latest: {latest_tag}")
 
-    print(f"📦 Current version: {current_version}, Latest: {latest_tag}")
-    if latest_tag and latest_tag != current_version and asset_url:
+    if latest_tag and asset_url and latest_tag != current_version:
         print("⬇️ Downloading update...")
         r = requests.get(asset_url)
         with open("update.zip", "wb") as f:
             f.write(r.content)
-        with zipfile.ZipFile("update.zip", 'r') as zip_ref:
+        print("📂 Extracting update...")
+        with zipfile.ZipFile("update.zip", "r") as zip_ref:
             zip_ref.extractall("update")
 
+        print("🛠️ Applying update...")
         for root, _, files in os.walk("update"):
             for file in files:
-                src_path = os.path.join(root, file)
-                rel_path = os.path.relpath(src_path, "update")
-                dst_path = os.path.join(".", rel_path)
+                src = os.path.join(root, file)
+                rel = os.path.relpath(src, "update")
+                dst = os.path.join(".", rel)
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.copy2(src, dst)
 
-                os.makedirs(os.path.dirname(dst_path), exist_ok=True)
-                shutil.copy2(src_path, dst_path)
+        if os.path.exists("update/requirements.txt"):
+            install_requirements("update/requirements.txt")
 
-        os.remove("update.zip")
         shutil.rmtree("update")
+        os.remove("update.zip")
         write_version(latest_tag)
-        print("✅ Update complete.")
-        return True
+        print("✅ Update applied. Restarting bot...")
+        os.execv(sys.executable, [sys.executable] + sys.argv)
     else:
         print("⏩ No update needed.")
-    return False
-
-
-def install_requirements():
-    if os.path.exists("requirements.txt"):
-        print("📦 Installing dependencies...")
-        subprocess.call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-    else:
-        print("⚠️ No requirements.txt found.")
-
-
-def restart_bot():
-    print("♻️ Restarting bot...")
-    os.execv(sys.executable, [sys.executable] + sys.argv)
-
 
 def should_update():
     return "--autoupdate" in sys.argv
 
+def main():
+    print("🚀 Starting Discord bot...")
+    keep_alive()
+
+    if not DISCORD_TOKEN:
+        print("❌ Environment variable 'discordkey' not set.")
+        sys.exit(1)
+    else:
+        print("✅ Token detected.")
+
+    if should_update():
+        update_bot()
+
+    install_requirements()
+    run_bot()
 
 def run_bot():
     import discord
     from discord.ext import commands
+    from discord import app_commands
 
     intents = discord.Intents.default()
     intents.message_content = True
@@ -101,39 +106,23 @@ def run_bot():
 
     @bot.event
     async def on_ready():
-        print(f"✅ Logged in as {bot.user}")
+        print(f"✅ Logged in as {bot.user} (ID: {bot.user.id})")
         try:
-            await bot.tree.sync()
+            synced = await bot.tree.sync()
+            print(f"✅ Synced {len(synced)} slash commands.")
         except Exception as e:
-            print(f"⚠️ Failed to sync commands: {e}")
+            print(f"⚠️ Slash command sync failed: {e}")
 
-    @bot.command()
-    async def ping(ctx):
-        await ctx.send("pong!")
+    @bot.tree.command(name="ping", description="Ping the bot")
+    async def ping(interaction: discord.Interaction):
+        await interaction.response.send_message("🏓 Pong!", ephemeral=True)
+
+    @bot.tree.command(name="status", description="Show bot status")
+    async def status(interaction: discord.Interaction):
+        version = get_current_version()
+        await interaction.response.send_message(f"✅ Bot is online. Version: {version}", ephemeral=True)
 
     asyncio.run(bot.start(DISCORD_TOKEN))
-
-
-def main():
-    if not DISCORD_TOKEN:
-        print("❌ DISCORD_TOKEN not set in environment variables.")
-        sys.exit(1)
-
-    keep_alive()  # Start web server for Render health check
-
-    if "--no-venv" not in sys.argv and sys.prefix == sys.base_prefix:
-        print("⚠️ Detected outside virtualenv. Recommend using --no-venv for container.")
-        sys.exit(1)
-
-    install_requirements()
-
-    if should_update():
-        updated = update_bot()
-        if updated:
-            restart_bot()
-
-    run_bot()
-
 
 if __name__ == "__main__":
     main()
