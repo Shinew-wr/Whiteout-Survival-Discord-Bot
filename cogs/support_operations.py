@@ -14,8 +14,8 @@ class SupportOperations(commands.Cog):
                 "━━━━━━━━━━━━━━━━━━━━━━\n"
                 "📝 **Request Support**\n"
                 "└ Get help and support\n\n"
-                "ℹ️ **About Project**\n"
-                "└ Project information\n"
+                "👨‍💻 **Developer About**\n"
+                "└ Developer information\n"
                 "━━━━━━━━━━━━━━━━━━━━━━"
             ),
             color=discord.Color.blue()
@@ -32,19 +32,23 @@ class SupportOperations(commands.Cog):
         support_embed = discord.Embed(
             title="🤖 Bot Support Information",
             description=(
-                "If you need help with the bot or are experiencing any issues, "
-                "please feel free to ask on our [Discord](https://discord.gg/HFnNnQWnbS)\n\n"
-                "**Additional resources:**\n"
-                "**GitHub Repository:** [Whiteout Project](https://github.com/whiteout-project/bot)\n"
-                "**Issues & Bug Reports:** [GitHub Issues](https://github.com/whiteout-project/bot/issues)\n\n"
-                "This bot is open source and maintained by the WOSLand community. "
-                "You can report bugs, request features, or contribute to the project "
-                "through our Discord or GitHub repository.\n\n"
-                "For technical support, please make sure to provide "
-                "detailed information about your problem."
+                "Hello! If you need help with the bot or are experiencing any issues, "
+                "you can always contact me.\n\n"
+                "**Discord Server:** [Click Here](https://discord.gg/h8w6N6my4a)\n"
+                "**Developer Contact:** Discord Username: Reloisback\n\n"
+                "Our bot's source code is always 100% open source. "
+                "This bot was created and published by Reloisback for free and "
+                "**WILL ALWAYS BE FREE.**\n\n"
+                "If you would like to support us\n"
+                "[☕ Buy me a coffee](https://www.buymeacoffee.com/reloisback)\n\n"
+                "You can always support by clicking this link.\n"
+                "Thank you for using my bot.\n"
+                "Feel free to contact me anytime for support."
             ),
-            color=discord.Color.blue()
+            color=discord.Color.gold()
         )
+
+        support_embed.set_thumbnail(url="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png")
         
         try:
             await interaction.response.send_message(embed=support_embed, ephemeral=True)
@@ -73,38 +77,53 @@ class SupportView(discord.ui.View):
         await self.cog.show_support_info(interaction)
 
     @discord.ui.button(
-        label="About Project",
-        emoji="ℹ️",
+        label="Developer About",
+        emoji="👨‍💻",
         style=discord.ButtonStyle.primary,
-        custom_id="about_project"
+        custom_id="developer_about"
     )
-    async def about_project_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def developer_about_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         about_embed = discord.Embed(
-            title="ℹ️ About Whiteout Project",
+            title="👨‍💻 About the Developer",
             description=(
-                "**Open Source Bot**\n"
+                "Thank you for clicking this button, as it shows your interest in learning "
+                "about the person behind this bot.\n\n"
+                "**Personal Introduction**\n"
                 "━━━━━━━━━━━━━━━━━━━━━━\n"
-                "This is an open source Discord bot for Whiteout Survival.\n"
-                "The project is community-driven and freely available for everyone.\n"
-                "**Repository:** [GitHub](https://github.com/whiteout-project/bot)\n"
-                "**Community:** [Discord](https://discord.gg/HFnNnQWnbS)\n\n"
-                "**Features**\n"
+                "I'm Umut, a 27-year-old developer specializing in Python and PHP. "
+                "While I used to be an avid gamer, my responsibilities as a family provider "
+                "have shifted my priorities, leaving limited time for gaming.\n\n"
+                "**Bot's Journey**\n"
                 "━━━━━━━━━━━━━━━━━━━━━━\n"
-                "• Alliance member management\n"
-                "• Gift code operations\n"
-                "• Automated member tracking\n"
-                "• Bear trap notifications\n"
-                "• ID channel verification\n"
-                "• and more...\n\n"
-                "**Contributing**\n"
+                "White of Survival bot started as a fun project for my own alliance. "
+                "Upon realizing there wasn't anything similar available, I decided to develop "
+                "it further and share it with the community. You're currently experiencing "
+                "Version 4, following successful releases of V1, V2, and V3.\n\n"
+                "The development process has been intense, ranging from 1-2 hours some days "
+                "to marathon 14-15 hour coding sessions.\n\n"
+                "**Why Free?**\n"
                 "━━━━━━━━━━━━━━━━━━━━━━\n"
-                "Contributions are welcome! Please check our GitHub repository "
-                "to report issues, suggest features, or submit pull requests."
+                "I'm often asked why I keep this bot free. The answer is simple: accessibility. "
+                "If monetized, the user base would shrink from thousands to perhaps just 10-15 users. "
+                "Having experienced financial constraints myself, I understand the importance of "
+                "making useful tools available to everyone, regardless of their financial situation.\n\n"
+                "**Support & Development**\n"
+                "━━━━━━━━━━━━━━━━━━━━━━\n"
+                "For those who can and wish to support the project, you can use the "
+                "[☕ Buy me a coffee](https://www.buymeacoffee.com/reloisback) link. "
+                "These contributions help cover development costs (proxies, servers, testing) "
+                "and support my family.\n\n"
+                "**Final Words**\n"
+                "━━━━━━━━━━━━━━━━━━━━━━\n"
+                "To those unable to provide financial support - thank you for using the bot! "
+                "Support has never been and will never be mandatory. This project will remain "
+                "free forever.\n\n"
+                "I love this community and thank you all for being part of this journey. ❤️"
             ),
-            color=discord.Color.green()
+            color=discord.Color.purple()
         )
 
-        about_embed.set_footer(text="Made with ❤️ by the WOSLand Bot Team.")
+        about_embed.set_footer(text="Made with ❤️ by Reloisback")
         
         try:
             await interaction.response.send_message(embed=about_embed, ephemeral=True)
@@ -116,7 +135,7 @@ class SupportView(discord.ui.View):
                     ephemeral=True
                 )
         except Exception as e:
-            print(f"Error sending project info: {e}")
+            print(f"Error sending developer info: {e}")
 
     @discord.ui.button(
         label="Main Menu",
@@ -135,4 +154,4 @@ class SupportView(discord.ui.View):
                 await alliance_cog.show_main_menu(interaction)
 
 async def setup(bot):
-    await bot.add_cog(SupportOperations(bot))
+    await bot.add_cog(SupportOperations(bot)) 

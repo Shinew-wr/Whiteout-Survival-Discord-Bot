@@ -1202,8 +1202,7 @@ class CustomTimeModal(discord.ui.Modal, title="Custom Time Range"):
                 )
                 return
             
-            await interaction.response.defer()
-            await self.cog.show_recent_changes(interaction, self.alliance_name, hours)
+            await self.cog.show_recent_nickname_changes(interaction, self.alliance_name, hours)
                 
         except ValueError:
             await interaction.response.send_message(
