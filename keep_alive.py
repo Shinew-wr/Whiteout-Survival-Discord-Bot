@@ -1,5 +1,6 @@
 from flask import Flask
 from threading import Thread
+import os
 
 app = Flask('')
 
@@ -7,14 +8,13 @@ app = Flask('')
 def main():
     try:
         with open("version", "r") as f:
-            return f"Discord bot ok - version: {f.read().strip()}"
+            version = f.read().strip()
     except:
-        return "Discord bot ok - version: unknown"
-
+        version = "unknown"
+    return f'Discord bot ok - version: {version}'
 
 def run():
     app.run(host="0.0.0.0", port=8080)
 
 def keep_alive():
-    server = Thread(target=run)
-    server.start()
+    Thread(target=run).start()
